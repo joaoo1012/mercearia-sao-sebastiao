@@ -170,7 +170,7 @@ async function carregarPorToken() {
 
 function mostrarConta(cod, c) {
   document.getElementById('h-nome').textContent = c.nome || '';
-  document.getElementById('h-cod').textContent = cod ? 'Cliente #' + cod : 'Cliente';
+  document.getElementById('h-cod').textContent = ''; : 'Cliente';
 
   const saldo = Number(c.saldo) || 0;
   const sel = document.getElementById('h-saldo');
