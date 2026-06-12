@@ -64,7 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="header-top">
       <div>
         <div class="header-nome" id="h-nome">—</div>
-      
+        
       </div>
       <button class="btn-sair" onclick="sair()">Sair</button>
     </div>
@@ -188,14 +188,13 @@ function mostrarConta(cod, c) {
       const totalInformado = e.total !== undefined && e.total !== null && e.total !== '';
       const total = totalInformado ? Number(e.total) || 0 : (qtd > 0 ? qtd * valorUnitario : valorUnitario);
       const neg = total < 0;
-      const qtdTexto = qtd > 0 ? ` x${qtd}` : '';
       const detalhe = qtd > 0
         ? `<div class="row-detalhe">${qtd} un. × ${fmt(valorUnitario)}</div>`
         : '';
 
       return `<div class="extrato-row">
         <div class="row-info">
-          <div class="row-hist">${escaparHtml(e.hist)}${escaparHtml(qtdTexto)}</div>
+          <div class="row-hist">${escaparHtml(e.hist)}</div>
           ${e.data ? `<div class="row-data">${escaparHtml(e.data)}</div>` : ''}
           ${detalhe}
         </div>
@@ -218,3 +217,4 @@ document.addEventListener('DOMContentLoaded', carregarPorToken);
 </script>
 </body>
 </html>
+
