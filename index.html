@@ -49,6 +49,23 @@ width: 90px;
 height: 90px;
 object-fit: contain;
 margin-bottom: 10px;
+}
+.whatsapp-float{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:#25D366;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  text-decoration:none;
+  box-shadow:0 4px 10px rgba(0,0,0,.2);
+}
 </style>
 </head>
 <body>
@@ -84,7 +101,14 @@ margin-bottom: 10px;
   <div class="extrato-card" id="extrato-list"></div>
   <div class="nota">Dúvidas? Fale com o Bar e Mercearia São Sebastião.</div>
 </div>
-
+<a
+ class="whatsapp-float"
+ href="https://wa.me/5512988278601"
+ target="_blank"
+>
+💬
+</a>
+  
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbw0Jfb-p2U_gtfNgTzgRHZvvsVKpkMYCSwSwejJ6NKAhnl2PvNVtfofWIAboMrCTbO5/exec';
 
