@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Bar e Mercearia São Sebastião</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column}
+.login-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px}
+.logo-icon{font-size:52px;margin-bottom:8px}
+.logo-title{font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:2px;text-align:center}
+.logo-sub{font-size:13px;color:#888;margin-bottom:28px;text-align:center}
+.login-card{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+.field-label{font-size:11px;font-weight:600;color:#666;margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:0.5px}
+.field-input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:16px;outline:none;margin-bottom:16px;background:#fafafa;transition:border-color 0.2s}
+.field-input:focus{border-color:#1e7e34;background:#fff}
+.btn-login{width:100%;padding:14px;background:#1e7e34;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:background 0.2s}
+.btn-login:active{background:#155724}
+.error-msg{font-size:13px;color:#dc2626;text-align:center;margin-top:12px;min-height:16px}
+.conta-header{background:#1e7e34;padding:20px 20px 16px;color:#fff}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.header-nome{font-size:18px;font-weight:600}
+.header-cod{font-size:12px;opacity:0.75}
+.btn-sair{background:rgba(255,255,255,0.2);border:none;color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer}
+.saldo-box{background:#fff;margin:16px;border-radius:14px;padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.saldo-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.saldo-valor{font-size:30px;font-weight:700;color:#dc2626}
+.saldo-valor.zerado{color:#1e7e34}
+.saldo-valor.credito{color:#1e7e34}
+.extrato-title{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.5px;padding:0 16px 8px}
+.extrato-card{background:#fff;margin:0 16px 16px;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.extrato-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #f0f0f0}
+.extrato-row:last-child{border-bottom:none}
+.row-info{flex:1;min-width:0}
+.row-hist{font-size:15px;font-weight:500;color:#1a1a1a;text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-data{font-size:12px;color:#aaa;margin-top:2px}
+.row-detalhe{font-size:12px;color:#777;margin-top:3px}
+.row-valor{font-size:15px;font-weight:600;color:#1a1a1a;white-space:nowrap;margin-left:12px}
+.row-valor.neg{color:#1e7e34}
+.empty-extrato{text-align:center;padding:32px 16px;color:#aaa;font-size:14px}
+.nota{font-size:12px;color:#aaa;text-align:center;padding:8px 16px 24px}
+</style>
+</head>
+<body>
+
+<div id="screen-login" class="screen active">
+  <div class="login-wrap">
+    <div class="logo-icon">🍺</div>
+    <div class="logo-title">Bar e Mercearia<br>São Sebastião</div>
+    <div class="logo-sub">Consulte sua conta</div>
+    <div class="login-card">
+      <div class="field-label">Status</div>
+      <div class="error-msg" id="erro" style="color:#666;min-height:40px;">Carregando sua conta...</div>
+      <button class="btn-login" id="btn-recarregar" onclick="carregarPorToken()">Atualizar</button>
+    </div>
+  </div>
+</div>
+
+<div id="screen-conta" class="screen">
+  <div class="conta-header">
+    <div class="header-top">
+      <div>
+        <div class="header-nome" id="h-nome">—</div>
+        <div class="header-cod" id="h-cod">Cliente #—</div>
+      </div>
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+  <div class="saldo-box">
+    <div class="saldo-label">Saldo devedor</div>
+    <div class="saldo-valor" id="h-saldo">R$ 0,00</div>
+  </div>
+  <div class="extrato-title">Lançamentos</div>
+  <div class="extrato-card" id="extrato-list"></div>
+  <div class="nota">Dúvidas? Fale com o Bar e Mercearia São Sebastião.</div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbw0Jfb-p2U_gtfNgTzgRHZvvsVKpkMYCSwSwejJ6NKAhnl2PvNVtfofWIAboMrCTbO5/exec';
+
+let carregandoCliente = false;
+let tokenAtual = "";
+
+function pegarTokenDaUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return (params.get("token") || "").trim();
+}
+
+function escaparHtml(txt) {
+  return String(txt || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function setBotaoCarregando(carregando) {
+  const botao = document.getElementById('btn-recarregar');
+  if (!botao) return;
+
+  botao.disabled = carregando;
+  botao.style.opacity = carregando ? '0.7' : '1';
+  botao.style.cursor = carregando ? 'wait' : 'pointer';
+  botao.textContent = carregando ? 'Carregando...' : 'Atualizar';
+}
+
+async function buscarClientePorToken(token) {
+  const url = API_URL + '?token=' + encodeURIComponent(token) + '&t=' + Date.now();
+
+  const resposta = await fetch(url, {
+    cache: 'no-store'
+  });
+
+  if (!resposta.ok) {
+    throw new Error('Erro HTTP ' + resposta.status);
+  }
+
+  const dados = await resposta.json();
+
+  if (!dados || dados.erro) {
+    throw new Error(dados && dados.erro ? dados.erro : 'Token inválido');
+  }
+
+  return dados;
+}
+
+function fmt(v) {
+  const num = Number(v) || 0;
+  return 'R$ ' + Math.abs(num)
+    .toFixed(2)
+    .replace('.', ',')
+    .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+async function carregarPorToken() {
+  const erro = document.getElementById('erro');
+
+  tokenAtual = pegarTokenDaUrl();
+
+  if (!tokenAtual) {
+    erro.style.color = '#dc2626';
+    erro.textContent = 'Link inválido. Abra o link individual enviado pela mercearia.';
+    return;
+  }
+
+  if (carregandoCliente) return;
+
+  carregandoCliente = true;
+  setBotaoCarregando(true);
+  erro.style.color = '#666';
+  erro.textContent = 'Carregando sua conta...';
+
+  try {
+    const cliente = await buscarClientePorToken(tokenAtual);
+    erro.textContent = '';
+    mostrarConta(cliente.codigo || '', cliente);
+  } catch (e) {
+    console.error('Erro ao buscar cliente:', e);
+    erro.style.color = '#dc2626';
+    erro.textContent = 'Erro: ' + (e.message || 'Não foi possível carregar sua conta.');
+  } finally {
+    carregandoCliente = false;
+    setBotaoCarregando(false);
+  }
+}
+
+function mostrarConta(cod, c) {
+  document.getElementById('h-nome').textContent = c.nome || '';
+  document.getElementById('h-cod').textContent = cod ? 'Cliente #' + cod : 'Cliente';
+
+  const saldo = Number(c.saldo) || 0;
+  const sel = document.getElementById('h-saldo');
+  sel.textContent = fmt(saldo);
+  sel.className = 'saldo-valor' + (saldo <= 0 ? ' credito' : '');
+
+  const lista = document.getElementById('extrato-list');
+
+  if (!c.extrato || c.extrato.length === 0) {
+    lista.innerHTML = '<div class="empty-extrato">Nenhum lançamento encontrado.</div>';
+  } else {
+    lista.innerHTML = c.extrato.map(e => {
+      const qtd = Number(e.qtd) || 0;
+      const valorUnitario = Number(e.valor) || 0;
+      const totalInformado = e.total !== undefined && e.total !== null && e.total !== '';
+      const total = totalInformado ? Number(e.total) || 0 : (qtd > 0 ? qtd * valorUnitario : valorUnitario);
+      const neg = total < 0;
+      const detalhe = qtd > 0
+        ? `<div class="row-detalhe">${qtd} un. × ${fmt(valorUnitario)}</div>`
+        : '';
+
+      return `<div class="extrato-row">
+        <div class="row-info">
+          <div class="row-hist">${escaparHtml(e.hist)}</div>
+          ${e.data ? `<div class="row-data">${escaparHtml(e.data)}</div>` : ''}
+          ${detalhe}
+        </div>
+        <div class="row-valor${neg ? ' neg' : ''}">${neg ? '↓ ' : ''}${fmt(total)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-conta').classList.add('active');
+}
+
+function sair() {
+  document.getElementById('screen-conta').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  carregarPorToken();
+}
+
+document.addEventListener('DOMContentLoaded', carregarPorToken);
+</script>
+</body>
+</html>
